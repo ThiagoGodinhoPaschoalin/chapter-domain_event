@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedDomain", "SharedDomai
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAppWithEventDelegateV2", "WebAppWithEventDelegateV2\WebAppWithEventDelegateV2.csproj", "{ED72F3EA-A560-4457-B7B2-C5F74EFFEA87}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{ED72F3EA-A560-4457-B7B2-C5F74EFFEA87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED72F3EA-A560-4457-B7B2-C5F74EFFEA87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED72F3EA-A560-4457-B7B2-C5F74EFFEA87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

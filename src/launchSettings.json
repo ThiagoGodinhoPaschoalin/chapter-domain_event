@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchServiceName": "webappwithmediatr",
+      "composeLaunchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
+      "serviceActions": {
+        "webappwitheventdelegate": "StartDebugging",
+        "webappwitheventdelegatev2": "StartDebugging",
+        "webappwithmediatr": "StartDebugging"
+      }
+    }
+  }
+}
