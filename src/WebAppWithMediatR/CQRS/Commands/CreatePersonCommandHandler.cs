@@ -23,7 +23,7 @@ namespace WebAppWithMediatR.CQRS.Commands
             if (result is null)
                 throw new AggregateException($"blabla, deu erro ao tentar persistir pessoa.");
 
-            await mediator.Publish(new PersonCreatedNotification(result));
+            await mediator.Publish(new PersonCreatedNotification(result), cancellationToken);
 
             return result.Id;
         }
