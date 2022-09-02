@@ -13,6 +13,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAppWithEventDelegateV2",
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAppWithEventDelegateV3", "WebAppWithEventDelegateV3\WebAppWithEventDelegateV3.csproj", "{7A04F658-21CD-4B17-9899-46E0F683E477}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAppWithReflectionAndEventDelegate", "WebAppWithReflectionAndEventDelegate\WebAppWithReflectionAndEventDelegate.csproj", "{F9E13FFB-B1D4-401A-A716-2350CBEDDF9A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4F7FC43C-AF01-4CDE-9C1C-760EC4B0EF7B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A04F658-21CD-4B17-9899-46E0F683E477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A04F658-21CD-4B17-9899-46E0F683E477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A04F658-21CD-4B17-9899-46E0F683E477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A04F658-21CD-4B17-9899-46E0F683E477}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9E13FFB-B1D4-401A-A716-2350CBEDDF9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9E13FFB-B1D4-401A-A716-2350CBEDDF9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9E13FFB-B1D4-401A-A716-2350CBEDDF9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9E13FFB-B1D4-401A-A716-2350CBEDDF9A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
