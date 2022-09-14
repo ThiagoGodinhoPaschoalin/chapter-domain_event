@@ -3,7 +3,6 @@ using Serilog;
 using Serilog.Events;
 using SharedDomain;
 using WebAppWithReflectionAndEventDelegate;
-using WebAppWithReflectionAndEventDelegate.Events;
 using WebAppWithReflectionAndEventDelegate.Facade;
 
 #region do not look
@@ -29,18 +28,14 @@ builder.Services.AddSwaggerGenNewtonsoftSupport();
 
 builder.Services.AddSharedDomainDependencyInjection();
 
-builder.Services.AddTgpEvents(allHandlers =>
-{
-    allHandlers.Append<PersonCreatedEventArgs, PersonCreatedThenCreateOccurrencyHandler>();
-    allHandlers.Append<PersonCreatedEventArgs, PersonCreatedThenShowLogInConsoleHandler>();
-});
+builder.Services.AddTgpEvents();
 
 builder.Services.AddTransient<PersonService>();
 builder.Services.AddTransient<OccurrencyService>();
 
 var app = builder.Build();
 
-app.Services.UseTgp();
+app.Services.UseTgpEvents();
 
 #region do not look
 // Configure the HTTP request pipeline.

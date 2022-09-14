@@ -20,8 +20,55 @@ Leituras importantes:
 Agora eu registro meus assinantes logo na inicialização do serviço.
 Isso não é melhor, em desempenho, do que estava antes, mas agora eu uma tenho visibilidade maior.
 Por uma questão de organização, eu consigo fazer uma leitura mais objetiva.
+```
+builder.Services.AddTgpEvents(allHandlers =>
+{
+    allHandlers.Append<PersonCreatedEventArgs, PersonCreatedThenCreateOccurrencyHandler>();
+    allHandlers.Append<PersonCreatedEventArgs, PersonCreatedThenShowLogInConsoleHandler>();
+});
+```
+
+Para criar uma classe que existe para ser um assinante, siga o exemplo:
+```
+public class MyHandlerForXptoAction : ITgpEventHandler<PersonCreatedEventArgs>
+{
+    public Task Handle(object? sender, PersonCreatedEventArgs eventArgs) {
+        ...///CODE HERE
+    }
+}
+```
 
 Perceba que eu ainda posso assinar eventos de dentro das classes, também posso ainda criar funções anônimas para assinar um evento.
+```
+public class XptoService {
+    
+    public XptoService(TgpEvents events) 
+    {
+        //anônimo e sem async/await
+        events.Subscribe<PersonCreatedEventArgs>( (sender, eventArgs) => 
+        {
+            Console.WriteLine("{0}\n{1}", sender, eventArgs); 
+            return Task.CompletedTask; 
+        });
+
+        //anônimo e com async/await
+        events.Subscribe<PersonCreatedEventArgs>( async (sender, eventArgs) => 
+        {
+            await Task.Delay(100);
+            Console.WriteLine("{0}\n{1}", sender, eventArgs); 
+        });
+
+        //método criado na camada de serviço
+        events.Subscribe<PersonCreatedEventArgs>( MyCustomHandler );
+    }
+
+    public Task MyCustomHandler(object? sender, PersonCreatedEventArgs eventArgs) {
+        ...///Code here
+    }
+}
+```
+
+Detalhes da codificação: Em `TgpEvents` o cuidado em não utilizar HARD-CODE! Tudo é uma referencia.
 
 Mas como está organizado aqui, não seria bacana. Vamos fazer uma análise rápida disso:
 
@@ -31,3 +78,5 @@ Mas quando chego no startup, surpresa! Não está lá!
 Bom, então espero que o amiguinho(a) desenvolvedor(a) tenha criar sua classe de Handler, na pasta padrão do serviço, certo?
 OPS... Não fez isso... :pensive: 
 Tá bem, basta dar um Ctrl+F, escrever o nome do evento, que será listado todos os Handlers gerado! Mas isso era preciso?
+
+No final das contas, tudo deve ser possível, pois podem existir situações que ainda não foram mapeadas, que só poderiam ser resolvidas exatamente como no exemplo acima.

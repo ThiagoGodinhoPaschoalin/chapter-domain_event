@@ -1,7 +1,15 @@
 ﻿using System.ComponentModel;
+using System.Reflection;
 
 namespace WebAppWithReflectionAndEventDelegate
 {
+    public interface ITgpEventHandler<in T> where T : EventArgs
+    {
+        Task Handle(object? sender, T eventArgs);
+    }
+
+
+
     public record EventAndHandlerObject(Type EventType, Type HandlerType);
 
     public class AddTgpEventsAndHandlers
@@ -11,6 +19,13 @@ namespace WebAppWithReflectionAndEventDelegate
         public AddTgpEventsAndHandlers()
         {
             eventsAndHandlers = new();
+        }
+
+        public AddTgpEventsAndHandlers(List<EventAndHandlerObject> eventAndHandlerObjects)
+        {
+            eventsAndHandlers = new();
+            foreach(var _obj in eventAndHandlerObjects)
+                eventsAndHandlers.TryAdd(_obj.HandlerType.Name, _obj);
         }
 
         public AddTgpEventsAndHandlers Append<TEventArgs, THandler>()
@@ -23,17 +38,61 @@ namespace WebAppWithReflectionAndEventDelegate
         }
     }
 
+    internal sealed class GetHandlers : AddTgpEventsAndHandlers
+    {
+        public GetHandlers()
+            : base()
+        { }
+
+        public GetHandlers(List<EventAndHandlerObject> eventAndHandlerObjects)
+            : base(eventAndHandlerObjects)
+        { }
+
+        public List<EventAndHandlerObject> GetAll()
+            => eventsAndHandlers.Select(pair => pair.Value)?.ToList() ?? new();
+
+        public bool NoSubscriber => !eventsAndHandlers.Any();
+    }
+
+
+
     public static class DiServices
     {
-        private sealed class GetHandlers : AddTgpEventsAndHandlers
+        private static GetHandlers? HandlersCollection { get; set; }
+
+        public static void AddTgpEvents(this IServiceCollection services, IEnumerable<Assembly> moreAssemblies = default!)
         {
-            public List<EventAndHandlerObject> GetAll() 
-                => eventsAndHandlers.Select(pair => pair.Value)?.ToList() ?? new();
+            var allAssemblies = AppDomain.CurrentDomain.GetAssemblies().Concat(moreAssemblies ?? Enumerable.Empty<Assembly>());
+            var typeInfoOfHandlers = allAssemblies.SelectMany(assembly => assembly.DefinedTypes
+                .Where(x => x.GetInterfaces().Any(iface => iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(ITgpEventHandler<>))));
 
-            public bool NoSubscriber => !eventsAndHandlers.Any();
+            if (!typeInfoOfHandlers.Any())
+                throw new InvalidOperationException($"Não foi encontrado nenhum assinante de evento dentro do padrão da biblioteca utilizando a interface {typeof(ITgpEventHandler<>)}.");
+
+            var result = typeInfoOfHandlers
+                .Select(typeInfo =>
+                {
+                    Type handlerType = Type.GetType(typeInfo.FullName!)!;
+
+                    Type eventArgsType = handlerType
+                        .GetInterfaces()
+                        .Select(interfaceType => interfaceType.GenericTypeArguments
+                            .First(args => args.BaseType != null && (args.BaseType.Name.Equals(nameof(EventArgs)) || args.BaseType.Name.Equals(nameof(CancelEventArgs)))))
+                        .First();
+
+                    return new EventAndHandlerObject(eventArgsType, handlerType);
+                })
+                .ToList();
+
+            services.AddSingleton<TgpEvents>();
+
+            HandlersCollection = new GetHandlers(result);
+            if (HandlersCollection.NoSubscriber)
+                throw new InvalidOperationException("You need register Handlers here.");
+
+            foreach (var handler in HandlersCollection.GetAll())
+                services.AddTransient(handler.HandlerType);
         }
-
-        private static GetHandlers? HandlersCollection {get; set;}
 
         public static void AddTgpEvents(this IServiceCollection services, Action<AddTgpEventsAndHandlers> handlers)
         {
@@ -49,16 +108,16 @@ namespace WebAppWithReflectionAndEventDelegate
                 services.AddTransient(handler.HandlerType);
         }
 
-        public static void UseTgp(this IServiceProvider serviceProvider)
+        public static void UseTgpEvents(this IServiceProvider serviceProvider)
         {
             if (HandlersCollection is null || HandlersCollection.NoSubscriber)
-                throw new InvalidOperationException($"Você precisa cadastrar seus assinantes utilizando {nameof(AddTgpEvents)}");
+                throw new InvalidOperationException($"Você precisa cadastrar seus assinantes utilizando '{nameof(AddTgpEvents)}'");
 
             var tgp = serviceProvider.GetRequiredService<TgpEvents>();
 
             foreach (var pairObject in HandlersCollection.GetAll())
             {
-                var handlerMethodInfo = pairObject.HandlerType.GetMethod("Handle", new[] { typeof(object), pairObject.EventType });
+                var handlerMethodInfo = pairObject.HandlerType.GetMethod(nameof(ITgpEventHandler<EventArgs>.Handle), new[] { typeof(object), pairObject.EventType });
 
                 if (handlerMethodInfo is null)
                     continue;
@@ -72,56 +131,9 @@ namespace WebAppWithReflectionAndEventDelegate
         }
     }
 
-    //public static class DiServicesV2
-    //{
+    
 
-    //    public static void UseTgpEvents(this IServiceProvider serviceProvider, IServiceCollection services)
-    //    {
-    //        IEnumerable<Type> allEventHandlers = services
-    //            .Where(x => x.ServiceType.GetInterfaces().Any(iface => iface.Name.Equals(nameof(ITgpEventHandler))))
-    //            .Where(x => x.ServiceType != null)
-    //            .Select(x => x.ServiceType);
-
-    //        var allEvents = allEventHandlers
-    //            .Select(type => new
-    //            {
-    //                EventHandlerType = type,
-    //                EventArgsName = type
-    //                    .GetInterfaces()
-    //                    .Select(interfaceType => interfaceType.GenericTypeArguments.FirstOrDefault(args => args.BaseType != null && args.BaseType.Name.Equals(nameof(EventArgs))))
-    //                    .Select(genericType => genericType?.FullName ?? "NotIdentifier")
-    //                    .First()
-    //            });
-
-    //        var tgp = serviceProvider.GetRequiredService<TgpEvents>();
-
-    //        foreach (var onePair in allEvents)
-    //        {
-    //            var eventArgsType = Type.GetType(onePair.EventArgsName);
-    //            if (eventArgsType is null)
-    //                continue;
-
-    //            var methodInfo = serviceProvider
-    //                .GetRequiredService(onePair.EventHandlerType)
-    //                .GetType()
-    //                .GetMethod("Handle");
-    //                ///?.MakeGenericMethod(typeof(object), eventArgsType);
-
-    //            if (methodInfo is null)
-    //                continue;
-
-    //            tgp.Subscribe(onePair.EventArgsName, methodInfo);
-    //        }
-    //    }
-    //}
-
-    public interface ITgpEventHandler<in T> where T : EventArgs
-    {
-        Task Handle(object? sender, T eventArgs);
-    }
-
-    public interface ITgpEvents { }
-    public class TgpEvents : ITgpEvents
+    public class TgpEvents
     {
         /// <summary>
         /// Para que eu possa 'cadastrar' os métodos manipuladores (Handler) de forma assíncrona (Task).
@@ -129,11 +141,16 @@ namespace WebAppWithReflectionAndEventDelegate
         /// <typeparam name="T"><see cref="EventArgs"/></typeparam>
         /// <param name="sender">Publisher Object</param>
         /// <param name="eventArgs">Event Content</param>
+        /// <remarks>
+        ///     Esse delegado representa o contrato que deve ser seguido para um evento! 
+        ///     Por esse motivo, existe uma interface que faz essa representação na classe.
+        ///     <see cref="ITgpEventHandler{T}.Handle(object?, T)"/> é a interface deste delegado.
+        /// </remarks>
         /// <returns></returns>
         public delegate Task AsyncEventHandler<in T>(object? sender, T eventArgs) where T : EventArgs;
 
         /// <summary>
-        /// Equivalente a um dicionário de Eventos
+        /// Dicionário com Eventos de Domínio
         /// </summary>
         private readonly EventHandlerList eventList;
         private readonly IServiceProvider serviceProvider;
@@ -161,6 +178,12 @@ namespace WebAppWithReflectionAndEventDelegate
                 Console.WriteLine("Evento '{0}' publicado, porém não existe nenhum assinante.", Key<T>());
                 return;
             }
+
+            /* TODO: 
+             * Criar uma abstração de Transação a nível CORE do systema.
+             * A ideia seria, Aqui mesmo, nesta linha, abrir uma transação, e caso algum Handler falhe, podemos desfazer todos os processos que fizerem parte do contexto.
+             * Ainda fica a pergunta: E se uma dos Handlers estiver fazendo uma chamada externa, enviando msg ao broker, ou um http request mesmo? Como notifico que deu ruim?
+             */
 
             ///Para que todos os assitantes possam executar seus blocos de execução utilizando injeção de dependência.
             ///Se eu não aguardar a conclusão dos blocos, pode ocorrer 'dispose' de um objeto sendo utilizado pelo assinante, e a execução falhar por conta disso.
