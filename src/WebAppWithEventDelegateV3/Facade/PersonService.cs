@@ -7,9 +7,9 @@ namespace WebAppWithEventDelegateV3.Facade
     public class PersonService
     {
         private readonly PersonRepository personRepository;
-        private readonly TgpEvents events;
+        private readonly ITgpEvents events;
 
-        public PersonService(PersonRepository personRepository, TgpEvents events)
+        public PersonService(PersonRepository personRepository, ITgpEvents events)
         {
             this.personRepository = personRepository;
             this.events = events;

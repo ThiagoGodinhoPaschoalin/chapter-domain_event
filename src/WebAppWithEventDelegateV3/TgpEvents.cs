@@ -4,27 +4,33 @@ namespace WebAppWithEventDelegateV3
 {
     public static class DiServices
     {
-        public static TgpEvents UseTgpEvents(this IServiceProvider serviceProvider)
+        public static ITgpEvents UseTgpEvents(this IServiceProvider serviceProvider)
         {
-            return serviceProvider.GetRequiredService<TgpEvents>();
-        }
-
-        public static TgpEvents AppendSubscriber<TEvent, TEventHandler>(this TgpEvents tgpEvents)
-            where TEvent : EventArgs
-            where TEventHandler : ITgpEventHandler<TEvent>
-        {
-            tgpEvents.Subscribe<TEvent, TEventHandler>();
-            return tgpEvents;
+            return serviceProvider.GetRequiredService<ITgpEvents>();
         }
     }
 
-    public interface ITgpEventHandler<in TEvent> 
-        where TEvent : EventArgs
+    public interface ITgpEvents
+    {
+        /// <summary>
+        /// Registrar um novo assinante. A Execução será feito pela ordem de cadastro. 
+        /// </summary>
+        /// <typeparam name="TEvent"><see cref="EventArgs"/></typeparam>
+        /// <typeparam name="TEventHandler"><see cref="ITgpEventHandler{TEvent}"/></typeparam>
+        /// <returns><see cref="ITgpEvents"/></returns>
+        ITgpEvents AppendSubscriber<TEvent, TEventHandler>() where TEvent : EventArgs where TEventHandler : ITgpEventHandler<TEvent>;
+
+        void Publish<T>(T args, CancellationToken cancellationToken = default) where T : EventArgs;
+
+        void Subscribe<T>(TgpEvents.AsyncEventHandler<T> asyncDelegate) where T : EventArgs;
+    }
+
+    public interface ITgpEventHandler<in TEvent> where TEvent : EventArgs
     {
         Task Handle(object sender, TEvent eventArgs);
     }
 
-    public class TgpEvents
+    public class TgpEvents : ITgpEvents
     {
         /// <summary>
         /// Para que eu possa 'cadastrar' os métodos manipuladores (Handler) de forma assíncrona (Task).
@@ -53,6 +59,14 @@ namespace WebAppWithEventDelegateV3
         {
             eventList = new EventHandlerList();
             this.serviceProvider = serviceProvider;
+        }
+
+        public ITgpEvents AppendSubscriber<TEvent, TEventHandler>()
+            where TEvent : EventArgs
+            where TEventHandler : ITgpEventHandler<TEvent>
+        {
+            Subscribe<TEvent>(serviceProvider.GetRequiredService<TEventHandler>().Handle);
+            return this;
         }
 
         public void Publish<T>(T args, CancellationToken cancellationToken = default) where T : EventArgs
@@ -91,13 +105,6 @@ namespace WebAppWithEventDelegateV3
         {
             eventList.RemoveHandler(Key<T>(), asyncDelegate);
             eventList.AddHandler(Key<T>(), asyncDelegate);
-        }
-
-        public void Subscribe<TEvent, TEventHandler>()
-            where TEvent : EventArgs
-            where TEventHandler : ITgpEventHandler<TEvent>
-        {
-            Subscribe<TEvent>(serviceProvider.GetRequiredService<TEventHandler>().Handle);
         }
 
         public void Unsubscribe<T>(AsyncEventHandler<T> asyncDelegate) where T : EventArgs

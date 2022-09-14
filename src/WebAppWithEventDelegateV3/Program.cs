@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGenNewtonsoftSupport();
 #endregion do not look
 
 builder.Services.AddSharedDomainDependencyInjection();
-builder.Services.AddSingleton<TgpEvents>();
+builder.Services.AddSingleton<ITgpEvents, TgpEvents>();
 builder.Services.AddTransient<PersonService>();
 builder.Services.AddTransient<OccurrencyService>();
 builder.Services.AddTransient<PersonCreatedThenCreateOccurrencyHandler>();
